@@ -42,23 +42,38 @@ public class Validator extends RouteBuilder {
             .setBody(simple("Error: Invalid JSON Schema"));
         
         from("direct:echoServiceUrl")
-        .setHeader("{{custom.header.name}}", simple("{{custom.header.content}}"))
-            // .to("json-validator:file:/deployments/json-schema/schema.json")
-            .to("json-validator:file:/deployments/schema.json")
-            .choice()
-                .when().simple("'{{rest.endpoint.protocol}}' == 'http'")
-                    .to("http://" + REST_ENDPOINT_ECHO)
-                        .log("HTTP Response: " + "${body}")
-                        .convertBodyTo(String.class)
-                // Uncomment to use https if needed
-                /* .otherwise()
-                    .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
-                        .log("HTTPS Response: " + "${body}")
-                        .convertBodyTo(String.class) */
+        .choice()
+            .when().simple("'{{custom.header.name}}' != 'null'")
+                .setHeader("{{custom.header.name}}", simple("{{custom.header.content}}"))
+                    // .to("json-validator:file:/deployments/json-schema/schema.json")
+                    .to("json-validator:file:/deployments/schema.json")
+                    .choice()
+                        .when().simple("'{{rest.endpoint.protocol}}' == 'http'")
+                            .to("http://" + REST_ENDPOINT_ECHO)
+                                .log("HTTP Response: " + "${body}")
+                                .convertBodyTo(String.class)
+                        // Uncomment to use https if needed
+                        /* .otherwise()
+                            .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
+                                .log("HTTPS Response: " + "${body}")
+                                .convertBodyTo(String.class) */
+                    .endChoice()
+            .otherwise()
+                .to("json-validator:file:/deployments/schema.json")
+                    .choice()
+                        .when().simple("'{{rest.endpoint.protocol}}' == 'http'")
+                            .to("http://" + REST_ENDPOINT_ECHO)
+                                .log("HTTP Response: " + "${body}")
+                                .convertBodyTo(String.class)
+                        // Uncomment to use https if needed
+                        /* .otherwise()
+                            .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
+                                .log("HTTPS Response: " + "${body}")
+                                .convertBodyTo(String.class) */
         .end();
         
         rest()
-            .post("/{{rest.endpoint.subpath}}").enableCORS(true).route()
+            .post("/{{rest.endpoint.subpath}}").produces("application/json").enableCORS(true).route()
             .to("direct:echoServiceUrl")
             .endRest();
     }
