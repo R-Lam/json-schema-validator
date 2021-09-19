@@ -52,6 +52,7 @@ public class Validator extends RouteBuilder {
                             .to("http://" + REST_ENDPOINT_ECHO)
                                 .log("HTTP Response: " + "${body}")
                                 .convertBodyTo(String.class)
+                                .setBody(simple("${body}"))
                         // Uncomment to use https if needed
                         /* .otherwise()
                             .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
@@ -65,6 +66,7 @@ public class Validator extends RouteBuilder {
                             .to("http://" + REST_ENDPOINT_ECHO)
                                 .log("HTTP Response: " + "${body}")
                                 .convertBodyTo(String.class)
+                                .setBody(simple("${body}"))
                         // Uncomment to use https if needed
                         /* .otherwise()
                             .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
