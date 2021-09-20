@@ -2,8 +2,10 @@ package com.gt.itm;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
 import org.apache.camel.component.jsonvalidator.JsonValidationException;
-import org.apache.camel.support.jsse.*;
+import org.apache.camel.http.base.HttpOperationFailedException;
+//import org.apache.camel.support.jsse.*;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
@@ -16,6 +18,7 @@ public class Validator extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
+        Processor httProcessor = new CamelProcessor();
         // SSL Configuration, uncomment only if needed (configured via Secret)
         /* KeyStoreParameters ksp = new KeyStoreParameters();
         ksp.setResource("/deployments/jks/server.jks");
@@ -40,38 +43,45 @@ public class Validator extends RouteBuilder {
             .setHeader(Exchange.CONTENT_TYPE, simple("text/plain"))
             .log("Body: ${body}, Header: ${headers}")
             .setBody(simple("Error: Invalid JSON Schema"));
+
+        onException(HttpOperationFailedException.class)
+            .handled(true)
+            .process(httProcessor)
+            .log("Error Response Code: ${header.CamelHttpResponseCode}");
+
+        from("direct:callHTTP")
+            .to("http://"  + REST_ENDPOINT_ECHO)
+                .streamCaching()
+                .log("Response Code: ${header.CamelHttpResponseCode}")
+                .convertBodyTo(String.class);
+
+        // Uncomment to use https if needed
+        //from("direct:callHTTPS")
+        //            .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
+        //            .streamCaching()
+        //            .log("Response Code: ${header.CamelHttpResponseCode}")
+        //            .convertBodyTo(String.class);
         
         from("direct:echoServiceUrl")
         .choice()
             .when().simple("'{{custom.header.name}}' != 'null'")
                 .setHeader("{{custom.header.name}}", simple("{{custom.header.content}}"))
-                    // .to("json-validator:file:/deployments/json-schema/schema.json")
                     .to("json-validator:file:/deployments/schema.json")
                     .choice()
                         .when().simple("'{{rest.endpoint.protocol}}' == 'http'")
-                            .to("http://" + REST_ENDPOINT_ECHO)
-                                .log("HTTP Response: " + "${body}")
-                                .convertBodyTo(String.class)
-                                .setBody(simple("${body}"))
+                            .to("direct:callHTTP")
                         // Uncomment to use https if needed
-                        /* .otherwise()
-                            .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
-                                .log("HTTPS Response: " + "${body}")
-                                .convertBodyTo(String.class) */
+                        //.otherwise()
+                        //    .to("direct:callHTTPS")
                     .endChoice()
             .otherwise()
                 .to("json-validator:file:/deployments/schema.json")
                     .choice()
                         .when().simple("'{{rest.endpoint.protocol}}' == 'http'")
-                            .to("http://" + REST_ENDPOINT_ECHO)
-                                .log("HTTP Response: " + "${body}")
-                                .convertBodyTo(String.class)
-                                .setBody(simple("${body}"))
+                            .to("direct:callHTTP")
                         // Uncomment to use https if needed
-                        /* .otherwise()
-                            .to("https://" + REST_ENDPOINT_ECHO + "&sslContextParameters=#sslContextParameters")
-                                .log("HTTPS Response: " + "${body}")
-                                .convertBodyTo(String.class) */
+                        //.otherwise()
+                        //    .to("direct:callHTTPS")
         .end();
         
         rest()
