@@ -4,7 +4,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.Exchange;
 import org.apache.camel.http.base.HttpOperationFailedException;
 
-public class CamelProcessor implements Processor {
+public class CamelErrorProcessor implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {

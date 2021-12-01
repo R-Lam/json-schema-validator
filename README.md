@@ -6,6 +6,15 @@ If you want to learn more about Quarkus, please visit its website: https://quark
 
 ## Running the application in dev mode
 
+Declare this variables in your shell before running:
+| Variable | Default Values | Optional |
+| -------- | ------ | ----- |
+| REST_ENDPOINT | `localhost:8090` | No |
+| REST_SUBPATH | `api/legumes` | No |
+| REST_PROTOCOL | `http` | Yes |
+| CUSTOM_HEADER | `null` | Yes |
+| CUSTOM_HEADER_CONTENT | `null` | Yes |
+
 You can run your application in dev mode that enables live coding using:
 ```shell script
 ./mvnw compile quarkus:dev
@@ -26,6 +35,14 @@ If you want to build an _über-jar_, execute the following command:
 ```shell script
 ./mvnw package -Dquarkus.package.type=uber-jar
 ```
+Declare this variables in your shell before running:
+| Variable | Default Values | Optional |
+| -------- | ------ | ----- |
+| REST_ENDPOINT | `localhost:8090` | No |
+| REST_SUBPATH | `api/legumes` | No |
+| REST_PROTOCOL | `http` | Yes |
+| CUSTOM_HEADER | `null` | Yes |
+| CUSTOM_HEADER_CONTENT | `null` | Yes |
 
 The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
 
